@@ -1,16 +1,9 @@
 const parser = require('@babel/parser');
-const traverse = require('@babel/traverse').default;
 
 const c = require('fs').readFileSync('./source/test.ts').toString()
+const analyze = require('./lib/analyze');
 
 const code = c;
-// const code = `
-// class A {
-//   aaa () {
-
-//   }
-// }
-// `;
 
 const output = parser.parse(code, {
   sourceType: 'module',
@@ -21,4 +14,4 @@ const output = parser.parse(code, {
   ]
 });
 
-// console.log(output.program.body[0].body)
+analyze(output);

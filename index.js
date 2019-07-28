@@ -9,7 +9,7 @@ const billController = path.join(chairConfig.controller, './huabei/bill.ts');
 const c = require('fs').readFileSync(billController).toString()
 
 const code = c;
- 
+
 const output = parser.parse(code, {
   sourceType: 'module',
   plugins: [
