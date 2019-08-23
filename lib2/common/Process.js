@@ -1,4 +1,7 @@
 class Process {
+  beforePrepare () {
+
+  },
   prepare () {
 
   }

@@ -6,7 +6,7 @@ class BasePlugin extends Process{
   entry () {
 
   }
-  parser () {
+  parse () {
 
   }
   analyze () {
@@ -25,6 +25,8 @@ function registerPlugin (plugin) {
 exports.BasePlugin = BasePlugin;
 exports.registerPlugin = registerPlugin;
 exports.runPlugins = (method, target) => {
+
+  target.beforePrepare();
 
   pluginList.forEach(p => p[method](target));
 
