@@ -1,5 +1,4 @@
 const { SyncHook, SyncWaterfallHook, SyncBailHook } = require("tapable");
-const parser = require('@babel/parser');
 const ZakuBase = require('./zaku-base');
 const ZakuParser = require('./zaku-parser');
 const ZakuAnalyzer = require('./zaku-analyzer');
@@ -7,6 +6,7 @@ const ZakuAnalyzer = require('./zaku-analyzer');
 class ZakuCore extends ZakuBase {
 
   constructor () {
+    super();
 
     this.config = {
       entry: null,
@@ -31,3 +31,5 @@ class ZakuCore extends ZakuBase {
     this.zakuAnalyzer.start(this);
   }
 }
+
+module.exports = ZakuCore;

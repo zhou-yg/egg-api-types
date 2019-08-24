@@ -32,6 +32,7 @@ function findEntry(ast, topScope) {
 }
 
 exports.analyze = (ast) => {
+
   const astText = JSON.stringify(ast.program.body, null, 2);
   fs.writeFileSync('program.json', astText);
 

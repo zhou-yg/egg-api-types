@@ -1,6 +1,6 @@
 class ZakuBase {
   start () {
-    
+    throw new Error('from ZakuBase');
   }
 }
 

@@ -1,8 +1,11 @@
 const { SyncHook, SyncWaterfallHook, SyncBailHook } = require("tapable");
 const ZakuBase = require('./zaku-base');
+const parser = require('@babel/parser');
+const fs = require('fs');
 
 class ZakuParser extends ZakuBase {
   constructor () {
+    super();
     this.hooks = {
       beforeParse: new SyncHook(['addPlugin']),
       afterParse: new SyncHook(['editAst']),
@@ -30,8 +33,6 @@ class ZakuParser extends ZakuBase {
     });
 
     this.ast = ast; 
-
-
  
     // only visit "ast" prop
     const proxyAst = new Proxy({}, {
@@ -50,7 +51,7 @@ class ZakuParser extends ZakuBase {
     this.hooks.afterParse.call(proxyAst);
   }
 
-  wart (core) {
+  start (core) {
 
     const code = fs.readFileSync(core.config.entry).toString();
     

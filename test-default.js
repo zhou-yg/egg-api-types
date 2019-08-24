@@ -1,9 +1,7 @@
-const {start, registerPlugin} = require('./lib/index');
+const ZakuCore = require('./lib2/zaku-core');
 
-const defaultPlugin = require('./plugins/plugin-default');
+const zaku = new ZakuCore();
 
-registerPlugin(defaultPlugin);
-
-const r = start('./source/ast-test.ts');
-
-console.log('r', r);
+zaku.start({
+  entry: './source/ast-test.ts',
+});
