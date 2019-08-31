@@ -5,12 +5,13 @@ const ZakuAnalyzer = require('./zaku-analyzer');
 
 class ZakuCore extends ZakuBase {
 
-  constructor () {
+  constructor (config = {}) {
     super();
 
-    this.config = {
+    this.config = Object.assign({
       entry: null,
-    };
+      plugins: [],
+    }, config);
 
     this.zakuParser = new ZakuParser();
     this.zakuAnalyzer = new ZakuAnalyzer();
@@ -22,8 +23,8 @@ class ZakuCore extends ZakuBase {
     };
   }
 
-  start (config = {}) {
-    this.config = Object.assign(this.config, config);
+  start () {
+    this.config.plugins.forEach(plugin => plugin.start(this));
 
     // generate ast
     this.zakuParser.start(this);

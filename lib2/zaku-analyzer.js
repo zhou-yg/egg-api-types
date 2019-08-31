@@ -3,10 +3,13 @@ const ZakuBase = require('./zaku-base');
 
 const {analyze} = require('./analyze/index');
 
+const ZAKU_START = 'ZAKU_START';
+
 class ZakuAnalyzer extends ZakuBase {
   constructor () {
     super();
     this.hooks = {
+      beforeStart: new SyncHook(['markStart']),
       matchNode: new SyncHook(['??']),
       intoNewScope: new SyncHook(['??'])
     };
@@ -15,7 +18,11 @@ class ZakuAnalyzer extends ZakuBase {
   start (core) {
     const ast = core.zakuParser.ast;
 
-    analyze(ast);
+    this.hooks.beforeStart.call({ 
+      ast, 
+      startTag: ZAKU_START,
+    });
+    // analyze(ast);
   }
 }
 
