@@ -4,26 +4,22 @@ const traverse = require('@babel/traverse').default;
 const { callFunc, match } = require('./serializeNode');
 const { ScopeManager } = require('./scopeManager');
 
+const ZAKU_START = 'ZAKU_START';
+
 function initScope(ast, topScope) {
   ast.program.body.forEach(topNode => {
     match(topNode, topScope);
   });
-  console.log(`topScope:`, topScope);
-  console.log('-----topScope init------');
+  // console.log(`topScope:`, topScope);
+  // console.log('-----topScope init------');
 }
 
 function findEntry(ast, topScope) {
   const arr = [];
   traverse(ast, {
-    ClassMethod(path) {
-      let hasReturn = false;
-      path.traverse({
-        ReturnStatement(p) {
-          hasReturn = true;
-        },
-      });
-      if (hasReturn) {
-        arr.push(path.node)
+    enter(path) {
+      if (path[ZAKU_START]) {
+        arr.push(path);
       }
     },
   })
@@ -31,10 +27,9 @@ function findEntry(ast, topScope) {
   return arr;
 }
 
-exports.analyze = (ast) => {
+exports.ZAKU_START = ZAKU_START;
 
-  const astText = JSON.stringify(ast.program.body, null, 2);
-  fs.writeFileSync('program.json', astText);
+exports.analyze = (ast) => {
 
   const topScope = new ScopeManager();
 
@@ -42,8 +37,9 @@ exports.analyze = (ast) => {
 
   let arr = findEntry(ast, topScope);
 
-  arr.forEach((methodNode) => {
-    let r = callFunc(methodNode, topScope);
-    console.log('callFunc entry: ', r);
+  let r = arr.map((path) => {
+    let r = callFunc(path.node, topScope);
+    return r;
   });
+  return r;
 };

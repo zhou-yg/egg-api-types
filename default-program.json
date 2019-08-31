@@ -2221,8 +2221,7 @@
               }
             ],
             "directives": []
-          },
-          "ZAKU_START": true
+          }
         },
         {
           "type": "ClassMethod",

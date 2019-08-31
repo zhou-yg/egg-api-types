@@ -1,28 +1,32 @@
 const { SyncHook, SyncWaterfallHook, SyncBailHook } = require("tapable");
 const ZakuBase = require('./zaku-base');
 
-const {analyze} = require('./analyze/index');
-
-const ZAKU_START = 'ZAKU_START';
+const { analyze, ZAKU_START } = require('./analyze/index');
 
 class ZakuAnalyzer extends ZakuBase {
   constructor () {
     super();
     this.hooks = {
-      beforeStart: new SyncHook(['markStart']),
+      analyzeStart: new SyncHook(['markStart']),
       matchNode: new SyncHook(['??']),
-      intoNewScope: new SyncHook(['??'])
+      intoNewScope: new SyncHook(['??']),
+      analyzeEnd: new SyncHook(['broadcastResult']),
     };
   }
 
   start (core) {
     const ast = core.zakuParser.ast;
 
-    this.hooks.beforeStart.call({ 
+    this.hooks.analyzeStart.call({ 
       ast, 
       startTag: ZAKU_START,
     });
-    // analyze(ast);
+    
+    const result = analyze(ast);
+
+    this.hooks.analyzeEnd.call({
+      result,
+    });
   }
 }
 

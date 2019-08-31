@@ -9,7 +9,7 @@ class PluginDefault extends ZakuPlugin{
 
   start(zaku) {
 
-    zaku.zakuAnalyzer.hooks.beforeStart.tap('markStart', ({ast, startTag}) => {
+    zaku.zakuAnalyzer.hooks.analyzeStart.tap('markStart', ({ast, startTag}) => {
       traverse(ast, {
         ClassMethod(path) {
           let hasReturn = false;
@@ -19,13 +19,17 @@ class PluginDefault extends ZakuPlugin{
             },
           });
           if (hasReturn) {
-            path.node[startTag] = true;
+            path[startTag] = true;
           }
         },
       });
 
       const astText = JSON.stringify(ast.program.body, null, 2);
       fs.writeFileSync('default-program.json', astText);
+    });
+
+    zaku.zakuAnalyzer.hooks.analyzeEnd.tap('getResult', ({ result}) => {
+      console.log(`result:`, result);
     });
   }
 }
