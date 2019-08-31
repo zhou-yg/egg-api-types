@@ -1,6 +1,8 @@
 // chair plugin
 const fs = require('fs');
 const path = require('path');
+const ZakuPlugin = require('../lib2/zaku-plugin');
+const traverse = require('@babel/traverse').default;
 
 const config = {
   pwd: '/Users/zhouyunge/Documents/ant-works/pcreditweb',
@@ -8,55 +10,58 @@ const config = {
   router: '/Users/zhouyunge/Documents/ant-works/pcreditweb/app/router.ts',
 };
 
-function findEntry (r) {
-  const paths = r.split('.');
+function equalRpc (a, b) {
+  return String(a).replace(/com\.alipay\.pcreditweb\./, '') === String(b).replace(/com\.alipay\.pcreditweb\./, '');
+}
 
-  let fileEntry;
-  let entryClassMethod;
+class PluginChair extends ZakuPlugin {
+  constructor (config) {
+    super();
 
-  paths.forEach((_, i) => {
-    if (fileEntry) {
-      return;
-    }
-    const file = path.join(config.pwd, ...paths.slice(0, i + 1));
-    const jsFile = file + '.js';
-    const tsFile = file + '.ts';
-    if (fs.existsSync(jsFile)) {
-      fileEntry = jsFile;
-    } else if (fs.existsSync(tsFile)) {
-      fileEntry = tsFile;
-    }
-    if (fileEntry) {
-      entryClassMethod = paths[i + 1];
-    }
-  });
-
-  if (!fileEntry) {
-    throw new Error('dont find entry controller file');
+    this.config = Object.assign({
+      rpcs: [],
+    }, config);
   }
+  start (zaku) {
+    zaku.zakuAnalyzer.hooks.analyzeStart.tap('markStart', ({ ast, startTag }) => {
 
-  return {
-    fileEntry,
-    entryClassMethod,
-  };
+      traverse(ast, {
+        CallExpression: (path) => {
+          let findRpcRegister = false;
+          path.traverse({
+            Identifier (path) {
+              if (path.node.name === 'rpcAndGet') {
+                findRpcRegister = true;
+              }
+            },
+          });
+          if (findRpcRegister) {
+            const rpcRegisterArgs = path.node.arguments;
+            const rpcName = rpcRegisterArgs[0].value;
+
+            if (this.config.rpcs.some(configRpc => {
+              let b = equalRpc(configRpc, rpcName);
+              return b;
+            })) {
+              const controller = rpcRegisterArgs[rpcRegisterArgs.length - 1];
+              console.log(controller);
+            }
+          }
+        },
+      });
+
+
+      const astText = JSON.stringify(ast.program.body, null, 2);
+      fs.writeFileSync('default-program.json', astText);
+    });
+
+    zaku.zakuAnalyzer.hooks.analyzeEnd.tap('getResult', ({ result }) => {
+      console.log(`result:`, result);
+    });
+  }
 }
 
-function entry () {
-  const routerCode = fs.readFileSync(config.router).toString();
-  const r = routerCode.match(/app\.rpcAndGet\([\w\W]+?\)/g);
+PluginChair.chairProject = config;
 
-  let entryArr = [];
-  r && r.forEach(line => {
-    if (/app\.controller\.huabei\.recommend\.queryContent/.test(line)) {
-      let r = line.match(/app[.a-zA-Z0-9]+?\)/);
-      if (r) {
-        r = r[0].replace(/\)$/, '');
-        entryArr.push(findEntry(r));
-      }
-    }
-  });
 
-  return entryArr;
-}
-
-exports.entry = entry;
+module.exports = PluginChair;

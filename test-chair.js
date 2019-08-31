@@ -1,9 +1,18 @@
-const {start, registerPlugin} = require('./lib/index');
+const ZakuCore = require('./lib2/zaku-core');
 
 const chairPlugin = require('./plugins/plugin-chair');
 
-registerPlugin(chairPlugin);
+console.log(chairPlugin.chairProject);
 
-const r = start();
+const zaku = new ZakuCore({
+  entry: chairPlugin.chairProject.router,
+  plugins: [
+    new chairPlugin({
+      rpcs: [
+        'com.alipay.pcreditweb.huabei.pay.queryAmount',
+      ],
+    }),
+  ],
+});
 
-console.log('r', r);
+zaku.start();
