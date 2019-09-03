@@ -1,5 +1,5 @@
 const NodeTypes = require('./types');
-const {ScopeManager} = require('./scopeManager');
+const {ScopeManager, PARSE_MODE} = require('./scopeManager');
 
 function matchFunc(node, scope) {
   if (node.body.type === NodeTypes.BlockStatement) {
@@ -27,7 +27,7 @@ function findExpression(node, scope) {
       return node;
     case NodeTypes.ArrayExpression:
       return node.elements.map(eleNode => match(eleNode, scope));
-    case NodeTypes.BinaryExpression:
+    case NodeTypes.BinaryExpression:      
       return {
         left: match(node.left, scope),
         operator: node.operator,
@@ -39,8 +39,16 @@ function findExpression(node, scope) {
         obj[propNode.key.name] = match(propNode.value, scope);
       });
       return obj;
-    case NodeTypes.Identifier:
-      return scope.getByName(node.name);
+    case NodeTypes.MemberExpression:
+      {
+        const obj = match(node.object, scope);
+        const propName = node.property.name;
+        if (obj && Object.keys(obj).includes(propName)) {
+          return obj[propName];
+        } else {
+          return `${obj}.${propName}`
+        }
+      }
     default:
 
   }
@@ -92,7 +100,7 @@ function match (node, scope) {
       if (node.name === 'undefined') {
         return undefined
       } else {
-        return scope.getByName(node.name);
+        return scope.getByName(node.name) || node.name;
       }
     case NodeTypes.FunctionDeclaration:
     case NodeTypes.ClassMethod:
@@ -108,11 +116,12 @@ function match (node, scope) {
     case NodeTypes.ArrayExpression:
     case NodeTypes.BinaryExpression:
     case NodeTypes.ObjectExpression:
+    case NodeTypes.MemberExpression:
       return findExpression(node, scope)
     case NodeTypes.ExpressionStatement:
       return makeExpressionStatement(node, scope)
     case NodeTypes.CallExpression:
-      return callFunc(scope.getByName(node.callee.name), scope);
+      return callFunc(scope.getByName(node.callee.name), node.arguments, scope);
     case NodeTypes.Literal:
     case NodeTypes.NumericLiteral:
     case NodeTypes.StringLiteral:
@@ -123,11 +132,16 @@ function match (node, scope) {
   }
 }
 
-function callFunc (node, scope) {
+function callFunc (node, args = [], scope) {
   if (!node) {
     throw new Error('callFunc: node is undefined');
   }
   let scopeInFunc = new ScopeManager(scope);
+
+  node.params.forEach((paramId, i) => {
+    scopeInFunc.setById(paramId, match(args[i], scope));
+  });
+
   console.log('-----> callFunc', 
     node.type, (node.id || node.key).name, node.body.type,
     scope,

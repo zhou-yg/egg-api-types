@@ -1,10 +1,10 @@
 const { SyncHook, SyncWaterfallHook, SyncBailHook } = require("tapable");
 
 const PARSE_MODE = {
-  PARSE: 0, // 仅parse，不计算
-  LAZY_RUN: 1, // 链路串联
-  REAL_RUN: 2, // 基于串联链路计算
-  RUN: 3, // 直接运算
+  PARSE: 'PARSE_0', // 仅parse，不计算
+  LAZY_RUN: 'LAZY_RUN_1', // 链路串联
+  REAL_RUN: 'REAL_RUN_2', // 基于串联链路计算
+  RUN: 'RUN_3', // 直接运算
 };
 
 class ScopeManager {
@@ -12,6 +12,11 @@ class ScopeManager {
     this.mode = parentScope ? parentScope.mode : PARSE_MODE.PARSE;
     this.parentScope = parentScope;
     this.scope = new Map();
+  }
+  setMode (m) {
+    if (!Object.values(PARSE_MODE).includes(m)) {
+      throw new Error('invalid mode')
+    }
   }
   setByName (name, v){
     this.scope.set(name, v);

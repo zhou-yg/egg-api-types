@@ -44,7 +44,14 @@ class PluginChair extends ZakuPlugin {
               return b;
             })) {
               const controller = rpcRegisterArgs[rpcRegisterArgs.length - 1];
-              console.log(controller);
+
+              path.traverse({
+                enter (p) {
+                  if (p.node === controller) {
+                    p[startTag] = true;
+                  }
+                },
+              });
             }
           }
         },

@@ -2,7 +2,7 @@ require('./types')
 const fs = require('fs');
 const traverse = require('@babel/traverse').default;
 const { callFunc, match } = require('./serializeNode');
-const { ScopeManager } = require('./scopeManager');
+const { ScopeManager, PARSE_MODE } = require('./scopeManager');
 
 const ZAKU_START = 'ZAKU_START';
 
@@ -32,14 +32,17 @@ exports.ZAKU_START = ZAKU_START;
 exports.analyze = (ast) => {
 
   const topScope = new ScopeManager();
+  topScope.setMode(ast.analyzeMode);
 
   initScope(ast, topScope);
 
   let arr = findEntry(ast, topScope);
 
   let r = arr.map((path) => {
-    let r = callFunc(path.node, topScope);
+    let r = callFunc(path.node, [], topScope);
     return r;
   });
   return r;
 };
+
+exports.PARSE_MODE = PARSE_MODE;
