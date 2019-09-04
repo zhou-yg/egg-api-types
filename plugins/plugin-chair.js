@@ -63,7 +63,7 @@ class PluginChair extends ZakuPlugin {
     });
 
     zaku.zakuAnalyzer.hooks.analyzeEnd.tap('getResult', ({ result }) => {
-      console.log(`result:`, result);
+      console.log(`result :`, JSON.stringify(result, null, 2));
     });
   }
 }

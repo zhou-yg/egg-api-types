@@ -7,16 +7,22 @@ const PARSE_MODE = {
   RUN: 'RUN_3', // 直接运算
 };
 
+const GLOBAL = { name: 'global' };
+
 class ScopeManager {
-  constructor (parentScope = null) {
+  constructor (parentScope = null, thisObject = null) {
     this.mode = parentScope ? parentScope.mode : PARSE_MODE.PARSE;
     this.parentScope = parentScope;
     this.scope = new Map();
+    this.thisObject = thisObject || GLOBAL;
   }
   setMode (m) {
     if (!Object.values(PARSE_MODE).includes(m)) {
       throw new Error('invalid mode')
     }
+  }
+  getThis () {
+    return this.thisObject;
   }
   setByName (name, v){
     this.scope.set(name, v);
@@ -36,3 +42,4 @@ class ScopeManager {
 
 exports.ScopeManager = ScopeManager;
 exports.PARSE_MODE = PARSE_MODE;
+exports.GLOBAL = GLOBAL;

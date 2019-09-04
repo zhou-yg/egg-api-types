@@ -1,22 +1,32 @@
 global.NodeTypes = {};
 
+// class
+global.NodeTypes.ClassDeclaration = 'ClassDeclaration';
+
 // 函数
+global.NodeTypes.ThisExpression = 'ThisExpression';
 global.NodeTypes.ArrowFunctionExpression = 'ArrowFunctionExpression';
 global.NodeTypes.FunctionExpression = 'FunctionExpression';
 global.NodeTypes.FunctionDeclaration = 'FunctionDeclaration';
 global.NodeTypes.ClassMethod = 'ClassMethod'; // ts
 global.NodeTypes.MethodDefinition = 'MethodDefinition'; // js
+global.NodeTypes.ObjectMethod = 'ObjectMethod';
 
 
 global.NodeTypes.BlockStatement = 'BlockStatement';
 
 global.NodeTypes.ReturnStatement = 'ReturnStatement';
 
+global.NodeTypes.FUNCTION_CALL = 'call';
+global.NodeTypes.FUNCTION_APPLY = 'APPLY';
+
 global.NodeTypes.FunctionTypes = [
-  global.NodeTypes.ArrowFunctionExpression,
-  global.NodeTypes.FunctionExpression,
-  global.NodeTypes.FunctionDeclaration,
-  global.NodeTypes.ClassMethod,
+  NodeTypes.ClassMethod,
+  NodeTypes.FunctionExpression,
+  NodeTypes.FunctionDeclaration,
+  NodeTypes.MethodDefinition,
+  NodeTypes.ArrowFunctionExpression,
+  NodeTypes.ObjectMethod,
 ];
 
 // new操作生成实例

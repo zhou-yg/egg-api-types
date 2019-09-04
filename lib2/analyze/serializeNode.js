@@ -1,13 +1,11 @@
 const NodeTypes = require('./types');
-const {ScopeManager, PARSE_MODE} = require('./scopeManager');
+const {ScopeManager, GLOBAL} = require('./scopeManager');
 
 function matchFunc(node, scope) {
   if (node.body.type === NodeTypes.BlockStatement) {
-    // node.body.body.map(bodyNode => {
-    //   let r = match(bodyNode, scopeInFunc);
-    // });
     scope.setById(node.id, node);
   } else {
+    throw new Error('matchFunc:' + node.type + ' ' + node.body.type);
   }
 }
 
@@ -36,17 +34,30 @@ function findExpression(node, scope) {
     case NodeTypes.ObjectExpression:
       const obj = {};
       node.properties.forEach(propNode => {
-        obj[propNode.key.name] = match(propNode.value, scope);
+        switch (propNode.type) {
+          case NodeTypes.ObjectProperty:
+            return obj[propNode.key.name] = match(propNode.value, scope);
+          case NodeTypes.ObjectMethod:
+            return obj[propNode.key.name] = match(propNode, scope);
+        }
       });
       return obj;
     case NodeTypes.MemberExpression:
       {
         const obj = match(node.object, scope);
         const propName = node.property.name;
-        if (obj && Object.keys(obj).includes(propName)) {
-          return obj[propName];
+        
+        if (obj) {
+          if (NodeTypes.FunctionTypes.includes(obj.type)) {
+            if ([NodeTypes.FUNCTION_CALL, NodeTypes.FUNCTION_APPLY].includes(propName)) {
+              return obj;
+            }
+          }
+          if (obj && Object.keys(obj).includes(propName)) {
+            return obj[propName];
+          }
         } else {
-          return `${obj}.${propName}`
+          return `${obj}.${propName}`          
         }
       }
     default:
@@ -81,14 +92,16 @@ function makeExpressionStatement (node, scope) {
     const right = node.expression.right;
     switch (left.type) {
       case NodeTypes.MemberExpression:
-        const targetObj = scope.getByName(left.object.name);
-        const key = left.computed ? match(left.property, scope) : left.property.name;
-        const value = match(right, scope);
-        targetObj[key] = value;
+        {
+          const targetObj = match(left.object, scope);
+          const key = left.computed ? match(left.property, scope) : left.property.name;
+          const value = match(right, scope);
+          targetObj[key] = value;
+        }
         break;
       case NodeTypes.Identifier:
         const targetValue = match(right, scope);
-        scope.setByName(left.name, targetValue);
+        scope.setByName(left.name, targetValue);        
     }
   }
 }
@@ -102,8 +115,12 @@ function match (node, scope) {
       } else {
         return scope.getByName(node.name) || node.name;
       }
+    
+    case NodeTypes.ClassDeclaration:
+      return initClass(node, scope);
     case NodeTypes.FunctionDeclaration:
     case NodeTypes.ClassMethod:
+    case NodeTypes.ObjectMethod:
       return matchFunc(node, scope);
     case NodeTypes.MethodDefinition:
       return matchFunc(node.value, scope)
@@ -121,7 +138,9 @@ function match (node, scope) {
     case NodeTypes.ExpressionStatement:
       return makeExpressionStatement(node, scope)
     case NodeTypes.CallExpression:
-      return callFunc(scope.getByName(node.callee.name), node.arguments, scope);
+      {
+        return callFunc(node, scope);
+      }
     case NodeTypes.Literal:
     case NodeTypes.NumericLiteral:
     case NodeTypes.StringLiteral:
@@ -129,39 +148,101 @@ function match (node, scope) {
     case NodeTypes.NullLiteral:
     case NodeTypes.TemplateLiteral:
       return getPrimitiveType(node, scope);
+    case NodeTypes.ThisExpression:
+      return scope.getThis();
   }
 }
 
-function callFunc (node, args = [], scope) {
-  if (!node) {
-    throw new Error('callFunc: node is undefined');
-  }
-  let scopeInFunc = new ScopeManager(scope);
+function findThis (node, scope) {
+  
+  switch (node.type) {
+    case NodeTypes.CallExpression:
+      if (node.callee.type === NodeTypes.MemberExpression) {
 
-  node.params.forEach((paramId, i) => {
+        return match(node.callee.object, scope);
+      }
+      break;
+    case NodeTypes.ClassMethod:
+    case NodeTypes.MethodDefinition:
+      //
+      break;
+  }
+
+  return GLOBAL;
+}
+
+function initClass(node, scope) {
+  let classIns = {};
+
+  node.body.body.forEach(classBodyNode => {
+    if (classBodyNode.key.name === 'constructor') {
+      callFunc(classBodyNode, scope, classIns);
+    } else {
+      classIns[classBodyNode.key.name] = classBodyNode;
+    }
+  });
+
+  scope.setById(node.id, classIns);
+}
+
+
+function callFunc (node, scope, classIns) {
+  let calleeNode, args;
+  let thisObject;
+
+  if (node.type === NodeTypes.CallExpression) {
+    calleeNode = match(node.callee, scope);
+    args = node.arguments;
+    thisObject = findThis(node, scope);
+  } else {
+    if (node.type === NodeTypes.ClassMethod) {
+      thisObject = classIns;
+    } else {
+      thisObject = GLOBAL;
+    }
+    // will loss this
+    calleeNode = node;
+    args = [];
+  }
+
+  if (!calleeNode) {
+    // throw new Error('callFunc: calleeNode is undefined or noexist');
+    return {
+      ...node,
+      arguments: node.arguments.map(n => match(n, scope)),
+    };
+  }
+  console.log("TCL: callFunc -> thisObject", calleeNode, thisObject)
+
+  const scopeInFunc = new ScopeManager(scope, thisObject);
+
+  console.log("TCL: callFunc -> scopeInFunc", thisObject)
+
+  
+  calleeNode.params.forEach((paramId, i) => {
     scopeInFunc.setById(paramId, match(args[i], scope));
   });
 
-  console.log('-----> callFunc', 
-    node.type, (node.id || node.key).name, node.body.type,
-    scope,
-  ' <---- ');
-  if (node.body.type === NodeTypes.BlockStatement) {
-    switch (node.type) {
+  // console.log("TCL: callFunc -> calleeNode", calleeNode, scopeInFunc)
+
+  if (calleeNode.body.type === NodeTypes.BlockStatement) {
+    switch (calleeNode.type) {
       case NodeTypes.ClassMethod:
-      case NodeTypes.ArrowFunctionExpression:
       case NodeTypes.FunctionExpression:
       case NodeTypes.FunctionDeclaration:
       case NodeTypes.MethodDefinition:
-        const funcBody = node.body.body;
+      case NodeTypes.ObjectMethod:
+        scopeInFunc.setById('arguments', args); // 只有箭头函数没有arguments
+      case NodeTypes.ArrowFunctionExpression:
+        const funcBody = calleeNode.body.body;
         funcBody.filter(n => n.type !== NodeTypes.ReturnStatement).forEach(n => {
-          let r = match(n, scopeInFunc);
+          match(n, scopeInFunc);
         });
         const returnNode = funcBody.find(n => n.type === NodeTypes.ReturnStatement);
-        return match(returnNode, scopeInFunc);
+        return returnNode ? match(returnNode, scopeInFunc) : undefined;
     }
-  } else if (node.body.type === NodeTypes.ReturnStatement) {
-    return match(node.body, scope);
+  } else {
+    return match(calleeNode.body, scopeInFunc);
   }
 }
 

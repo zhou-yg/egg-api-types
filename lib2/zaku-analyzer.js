@@ -27,7 +27,6 @@ class ZakuAnalyzer extends ZakuBase {
       startTag: ZAKU_START,
     });
 
-
     const result = analyze(ast);
 
     this.hooks.analyzeEnd.call({
