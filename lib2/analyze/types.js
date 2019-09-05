@@ -37,6 +37,7 @@ global.NodeTypes.VariableDeclaration = 'VariableDeclaration';
 global.NodeTypes.VariableDeclarator = 'VariableDeclarator';
 
 // 表达式
+global.NodeTypes.ObjectProperty = 'ObjectProperty';
 global.NodeTypes.CallExpression = 'CallExpression';
 global.NodeTypes.ObjectExpression = 'ObjectExpression';
 global.NodeTypes.ArrayExpression = 'ArrayExpression';

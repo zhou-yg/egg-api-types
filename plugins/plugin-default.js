@@ -10,19 +10,6 @@ class PluginDefault extends ZakuPlugin{
   start(zaku) {
 
     zaku.zakuAnalyzer.hooks.analyzeStart.tap('markStart', ({ast, startTag}) => {
-      traverse(ast, {
-        ClassMethod(path) {
-          let hasReturn = false;
-          path.traverse({
-            ReturnStatement(p) {
-              hasReturn = true;
-            },
-          });
-          if (hasReturn) {
-            path[startTag] = true;
-          }
-        },
-      });
 
       const astText = JSON.stringify(ast.program.body, null, 2);
       fs.writeFileSync('default-program.json', astText);

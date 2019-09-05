@@ -8,6 +8,9 @@ function matchFunc(node, scope) {
     throw new Error('matchFunc:' + node.type + ' ' + node.body.type);
   }
 }
+function matchClass (node, scope) {
+  scope.setById(node.id, node);
+}
 
 
 function matchDeclaration(node ,scope) {
@@ -22,6 +25,7 @@ function findExpression(node, scope) {
   switch (node.type) {
     case NodeTypes.ArrowFunctionExpression:
     case NodeTypes.FunctionExpression:
+    case NodeTypes.ObjectMethod:
       return node;
     case NodeTypes.ArrayExpression:
       return node.elements.map(eleNode => match(eleNode, scope));
@@ -117,10 +121,8 @@ function match (node, scope) {
       }
     
     case NodeTypes.ClassDeclaration:
-      return initClass(node, scope);
+      return matchClass(node, scope);
     case NodeTypes.FunctionDeclaration:
-    case NodeTypes.ClassMethod:
-    case NodeTypes.ObjectMethod:
       return matchFunc(node, scope);
     case NodeTypes.MethodDefinition:
       return matchFunc(node.value, scope)
@@ -134,12 +136,24 @@ function match (node, scope) {
     case NodeTypes.BinaryExpression:
     case NodeTypes.ObjectExpression:
     case NodeTypes.MemberExpression:
+    case NodeTypes.ObjectMethod:
       return findExpression(node, scope)
     case NodeTypes.ExpressionStatement:
       return makeExpressionStatement(node, scope)
     case NodeTypes.CallExpression:
       {
-        return callFunc(node, scope);
+        const calleeNode = match(node.callee, scope);
+        const args = node.arguments;
+        const thisObject = findThis(node, scope);
+
+        // 缺省输出
+        if (!calleeNode) {
+          return {
+            ...node,
+            arguments: node.arguments.map(n => match(n, scope)),
+          };
+        }
+        return callFunc(calleeNode, scope, thisObject, args);
       }
     case NodeTypes.Literal:
     case NodeTypes.NumericLiteral:
@@ -171,59 +185,28 @@ function findThis (node, scope) {
   return GLOBAL;
 }
 
-function initClass(node, scope) {
+function initClass(node, args, scope) {
   let classIns = {};
 
   node.body.body.forEach(classBodyNode => {
     if (classBodyNode.key.name === 'constructor') {
-      callFunc(classBodyNode, scope, classIns);
+      callFunc(classBodyNode, scope, classIns, args);
     } else {
       classIns[classBodyNode.key.name] = classBodyNode;
     }
   });
 
-  scope.setById(node.id, classIns);
+  return classIns;
 }
 
 
-function callFunc (node, scope, classIns) {
-  let calleeNode, args;
-  let thisObject;
-
-  if (node.type === NodeTypes.CallExpression) {
-    calleeNode = match(node.callee, scope);
-    args = node.arguments;
-    thisObject = findThis(node, scope);
-  } else {
-    if (node.type === NodeTypes.ClassMethod) {
-      thisObject = classIns;
-    } else {
-      thisObject = GLOBAL;
-    }
-    // will loss this
-    calleeNode = node;
-    args = [];
-  }
-
-  if (!calleeNode) {
-    // throw new Error('callFunc: calleeNode is undefined or noexist');
-    return {
-      ...node,
-      arguments: node.arguments.map(n => match(n, scope)),
-    };
-  }
-  console.log("TCL: callFunc -> thisObject", calleeNode, thisObject)
+function callFunc(calleeNode, scope, thisObject = GLOBAL, args = []) {
 
   const scopeInFunc = new ScopeManager(scope, thisObject);
-
-  console.log("TCL: callFunc -> scopeInFunc", thisObject)
-
   
   calleeNode.params.forEach((paramId, i) => {
     scopeInFunc.setById(paramId, match(args[i], scope));
   });
-
-  // console.log("TCL: callFunc -> calleeNode", calleeNode, scopeInFunc)
 
   if (calleeNode.body.type === NodeTypes.BlockStatement) {
     switch (calleeNode.type) {
@@ -235,6 +218,7 @@ function callFunc (node, scope, classIns) {
         scopeInFunc.setById('arguments', args); // 只有箭头函数没有arguments
       case NodeTypes.ArrowFunctionExpression:
         const funcBody = calleeNode.body.body;
+
         funcBody.filter(n => n.type !== NodeTypes.ReturnStatement).forEach(n => {
           match(n, scopeInFunc);
         });
@@ -248,3 +232,4 @@ function callFunc (node, scope, classIns) {
 
 exports.match = match;
 exports.callFunc = callFunc;
+exports.initClass = initClass;

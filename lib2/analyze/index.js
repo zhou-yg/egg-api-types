@@ -3,7 +3,7 @@ const fs = require('fs');
 const traverse = require('@babel/traverse').default;
 const T = require('@babel/types');
 
-const { callFunc, match } = require('./serializeNode');
+const { callFunc, match, initClass } = require('./serializeNode');
 const { ScopeManager, PARSE_MODE } = require('./scopeManager');
 const ZAKU_START = 'ZAKU_START';
 
@@ -22,7 +22,8 @@ function wrapperToCallExpression (path) {
     NodeTypes.CallExpression,
     ...NodeTypes.FunctionTypes,
   ].includes(node.type)) {
-    return node;
+    const callFuncName = T.identifier(node.id.name);
+    return T.callExpression(callFuncName, []);
   } else  {
     return T.callExpression(node, [])
   }
@@ -32,8 +33,6 @@ function initScope(ast, topScope) {
   ast.program.body.forEach(topNode => {
     match(topNode, topScope);
   });
-  console.log(`topScope:`, topScope);
-  console.log('-----topScope init------');
 }
 
 function findEntry(ast, topScope) {
@@ -57,19 +56,28 @@ exports.ZAKU_START = ZAKU_START;
 exports.analyze = (ast) => {
 
   const topScope = new ScopeManager();
-  topScope.setMode(ast.analyzeMode);
 
   initScope(ast, topScope);
+  console.log("TCL: exports.analyze -> topScope", topScope)
+  console.log('-----topScope init------');
 
   let arr = findEntry(ast, topScope);
 
   let r = arr.map((path) => {
 
-    const callExpressionNode = wrapperToCallExpression(path)
-    console.log("TCL: exports.analyze -> callExpressionNode", callExpressionNode)
+    let callRessult;
+    if (path.node.type === NodeTypes.ClassMethod) {
+      let classIns = initClass(path.scope.parent.path.node);
 
-    let r = callFunc(callExpressionNode, topScope);
-    return r;
+      callRessult = callFunc(path.node, topScope, classIns, []);
+    } else {
+      const callExpressionNode = wrapperToCallExpression(path);
+      console.log("TCL: exports.analyze -> callExpressionNode", callExpressionNode)
+      
+      callRessult = match(callExpressionNode, topScope);
+    }
+
+    return callRessult;
   });
   return r;
 };

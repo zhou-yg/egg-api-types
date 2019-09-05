@@ -18,7 +18,7 @@ class ScopeManager {
   }
   setMode (m) {
     if (!Object.values(PARSE_MODE).includes(m)) {
-      throw new Error('invalid mode')
+      throw new Error('invalid mode :' + m)
     }
   }
   getThis () {
