@@ -1,4 +1,4 @@
-const ZakuCore = require('./lib2/zaku-core');
+const ZakuCore = require('./lib/zaku-core');
 const defaultPlugin = require('./plugins/plugin-default');
 
 const zaku = new ZakuCore({

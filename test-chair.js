@@ -1,4 +1,4 @@
-const ZakuCore = require('./lib2/zaku-core');
+const ZakuCore = require('./lib/zaku-core');
 
 const chairPlugin = require('./plugins/plugin-chair');
 

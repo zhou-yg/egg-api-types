@@ -1,5 +1,5 @@
 const json = require('./program.json')
-const types = require('./lib2/analyze/types');
+const types = require('./lib/analyze/types');
 
 const oldTypes = Object.values(types)
 

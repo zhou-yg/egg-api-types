@@ -1,7 +1,7 @@
 // chair plugin
 const fs = require('fs');
 const path = require('path');
-const ZakuPlugin = require('../lib2/zaku-plugin');
+const ZakuPlugin = require('../lib/zaku-plugin');
 const traverse = require('@babel/traverse').default;
 
 const config = {

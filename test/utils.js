@@ -1,5 +1,5 @@
-const Parser = require('../lib2/zaku-parser');
-const Analyzer = require('../lib2/zaku-analyzer');
+const Parser = require('../lib/zaku-parser');
+const Analyzer = require('../lib/zaku-analyzer');
 const fs = require('fs');
 const path = require('path');
 

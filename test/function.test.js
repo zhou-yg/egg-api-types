@@ -1,4 +1,4 @@
-const {analyze} = require('../lib2/analyze/index');
+const {analyze} = require('../lib/analyze/index');
 const {loadCode} = require('./utils');
 
 let mockAst;
