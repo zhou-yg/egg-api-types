@@ -1,6 +1,7 @@
 const ZakuPlugin = require('../lib/zaku-plugin');
 const traverse = require('@babel/traverse').default;
 const fs = require('fs');
+const generate = require('@babel/generator').default;
 
 class PluginDefault extends ZakuPlugin{
   constructor () {
@@ -17,6 +18,13 @@ class PluginDefault extends ZakuPlugin{
 
     zaku.zakuAnalyzer.hooks.analyzeEnd.tap('getResult', ({ result}) => {
       console.log(`result :`, JSON.stringify(result, null, 2));
+      console.log(`result2 :`, generate({
+        type: 'Program',
+        body: [{
+          type: 'ExpressionStatement',
+          expression: result[0]
+        }],
+      }));
     });
   }
 }

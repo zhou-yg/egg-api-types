@@ -20,5 +20,9 @@ test('this', () => {
 
 test('class', () => {
   let r = analyze(mockAst.function.class);
-  expect(r).toStrictEqual(['class'])
+  expect(r).toStrictEqual([{
+    left: 'class',
+    operator: '+',
+    right: 1,
+  }])
 });

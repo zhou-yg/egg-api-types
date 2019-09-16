@@ -59,6 +59,17 @@
     source-map "^0.5.0"
     trim-right "^1.0.1"
 
+"@babel/generator@^7.6.0":
+  version "7.6.0"
+  resolved "https://registry.npm.alibaba-inc.com/@babel/generator/download/@babel/generator-7.6.0.tgz#e2c21efbfd3293ad819a2359b448f002bfdfda56"
+  integrity sha1-4sIe+/0yk62BmiNZtEjwAr/f2lY=
+  dependencies:
+    "@babel/types" "^7.6.0"
+    jsesc "^2.5.1"
+    lodash "^4.17.13"
+    source-map "^0.5.0"
+    trim-right "^1.0.1"
+
 "@babel/helper-function-name@^7.1.0":
   version "7.1.0"
   resolved "https://registry.yarnpkg.com/@babel/helper-function-name/-/helper-function-name-7.1.0.tgz#a0ceb01685f73355d4360c1247f582bfafc8ff53"
@@ -145,6 +156,15 @@
   version "7.5.5"
   resolved "https://registry.npm.alibaba-inc.com/@babel/types/download/@babel/types-7.5.5.tgz#97b9f728e182785909aa4ab56264f090a028d18a"
   integrity sha1-l7n3KOGCeFkJqkq1YmTwkKAo0Yo=
+  dependencies:
+    esutils "^2.0.2"
+    lodash "^4.17.13"
+    to-fast-properties "^2.0.0"
+
+"@babel/types@^7.6.0":
+  version "7.6.1"
+  resolved "https://registry.npm.alibaba-inc.com/@babel/types/download/@babel/types-7.6.1.tgz#53abf3308add3ac2a2884d539151c57c4b3ac648"
+  integrity sha1-U6vzMIrdOsKiiE1TkVHFfEs6xkg=
   dependencies:
     esutils "^2.0.2"
     lodash "^4.17.13"

@@ -3,6 +3,10 @@ class AAA {
     this.a = 'class';
   }
   main() {
-    return this.a;
+    return this.a + this.b();
+  }
+
+  b () {
+    return 1;    
   }
 }

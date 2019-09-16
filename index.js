@@ -1,44 +1,62 @@
-require('./config');
+const { parse } = require('@babel/parser');
+const generate = require('@babel/generator').default;
 
-const parser = require('@babel/parser');
-const traverse = require('@babel/traverse').default;
-const path = require('path');
+const a = 'var a = 1;';
+const b = "b().c('aaa')";
+const astA = parse(a);
+const astB = parse(b);
+let astB2 = {
+  type: 'Program',
+  body: astB.program.body
+}
+let ast = {
+  type: 'Program',
+  body: [
+    {
+      "type": "ExpressionStatement",
+      "start": 0,
+      "end": 10,
+      "expression": {
+        "type": "CallExpression",
+        "start": 0,
+        "end": 10,
+        "callee": {
+          "type": "MemberExpression",
+          "start": 0,
+          "end": 5,
+          "object": {
+            "type": "CallExpression",
+            "start": 0,
+            "end": 3,
+            "callee": {
+              "type": "Identifier",
+              "start": 0,
+              "end": 1,
+              "name": "b"
+            },
+            "arguments": []
+          },
+          "property": {
+            "type": "Identifier",
+            "start": 4,
+            "end": 5,
+            "name": "a"
+          },
+          "computed": false
+        },
+        "arguments": [
 
-const billController = path.join(chairConfig.controller, './huabei/bill.ts');
-
-const c = require('fs').readFileSync(billController).toString()
-
-const code = c;
-
-const output = parser.parse(code, {
-  sourceType: 'module',
-  plugins: [
-    'typescript',
-    ['decorators', { decoratorsBeforeExport: true }],
-  ]
-});
-
-// console.log(output.program.body[1].body.body[0])
-
-let preMethod = null;
-
-traverse(output, {
-  // ClassMethod: {
-  //   enter(path) {
-  //     console.log(path);
-  //     // console.log('===')
-  //   }
-  // },
-  ClassMethod (path) {
-    console.log(path.node.key.name);
-
-    preMethod = path.node;
-  },
-  ReturnStatement (path) {
-    if (preMethod) {
-      console.log(path.node.argument);
-      preMethod = null;
-      console.log('--->')
+        ]
+      }
     }
-  },
-})
+  ]
+};
+
+ast = JSON.parse(JSON.stringify(ast));
+
+const { code, map } = generate(astB2);
+
+console.log(JSON.stringify(astB.program.body, null ,2));
+
+console.log(code)
+
