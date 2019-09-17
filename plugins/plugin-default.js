@@ -20,11 +20,10 @@ class PluginDefault extends ZakuPlugin{
       console.log(`result :`, JSON.stringify(result, null, 2));
       console.log(`result2 :`, generate({
         type: 'Program',
-        body: [{
-          type: 'ExpressionStatement',
-          expression: result[0]
-        }],
-      }));
+        body: [
+          result[0]
+        ],
+      }).code);
     });
   }
 }
